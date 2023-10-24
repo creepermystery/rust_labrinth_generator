@@ -1,5 +1,5 @@
 [package]
-name = "RUST_LABRINTH_GENERATOR"
+name = "rust_labrinth_generator"
 version = "0.1.0"
 edition = "2021"
 
