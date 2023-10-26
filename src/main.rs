@@ -1,10 +1,11 @@
 use rand::Rng;
+use rand::thread_rng;
 
-fn print_labrinth(labrinth: Vec<Vec<usize>>) {
+fn print_labrinth(labrinth:&Vec<Vec<usize>>) {
     let labrinth_size = labrinth.len();
-    for k in 0..labrinth_size {
+    for i in 0..labrinth_size {
         for j in 0..labrinth_size {
-            if labrinth[j][k] == 1 {
+            if labrinth[j][i] == 1 {
                 print!("█");
             }
             else {
@@ -31,8 +32,8 @@ fn grid_builder (grid_size:usize) -> Vec<Vec<usize>> {
             grid.push(full_collum.clone());
         }
         else {
-            for l in 0..grid_size {
-                if l%2 == 0 {
+            for j in 0..grid_size {
+                if j%2 == 0 {
                     collum.push(1);
                 }
                 else {
@@ -48,24 +49,80 @@ fn grid_builder (grid_size:usize) -> Vec<Vec<usize>> {
     return grid
 }
 
-fn labrinth_bore (grid:Vec<Vec<usize>>) -> Vec<Vec<usize>> {
-    let labrinth_size = grid.len();
-    while labrinth_finished(grid) == 0 {
-        let x = rand::thread_rng::gen_range(0..((labrinth_size-1)/2-1));
-        let y = rand::thread_rng::gen_range(0..((labrinth_size-1)/2-1));
-        let wall_x_position = x*2;
-        let wall_y_position = y*2;
-        if grid[wall_x_position][wall_y_position] == 1 {
-            // bore_wall()
-            // unicise numbers()
+fn labrinth_bore (labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
+    let labrinth_size = labrinth.len();
+    
+    let mut valid_walls_coords: Vec<Vec<usize>> = Vec::new();
+
+    for i in 1..labrinth_size-1 {
+        for j in 1..labrinth_size-1 {
+            let wall_coords = vec![i, j];
+            if i%2 == 0 && j%2 == 1 {
+                let left_cell = labrinth[i-1][j];
+                let right_cell = labrinth[i+1][j];
+                if left_cell != right_cell {
+                    valid_walls_coords.push(wall_coords);
+                }
+            }
+            else if i%2 == 1 && j%2 == 0 {
+                let up_cell = labrinth[i][j-1];
+                let down_cell = labrinth[i][j+1];
+                if up_cell != down_cell {
+                    valid_walls_coords.push(wall_coords);
+                }
+            }
         }
     }
+    while valid_walls_coords.len() != 0 {
+        let chosen_wall = rand::thread_rng().gen_range(0..valid_walls_coords.len());
+        let chosen_wall_coords = valid_walls_coords[chosen_wall].clone();
+        valid_walls_coords.remove(chosen_wall);
+
+        if chosen_wall_coords[0]%2 == 0 && chosen_wall_coords[1]%2 == 1 {
+            let left_number = labrinth[chosen_wall_coords[0]-1][chosen_wall_coords[0]];
+            let right_number = labrinth[chosen_wall_coords[0]+1][chosen_wall_coords[0]];
+            labrinth[chosen_wall_coords[0]][chosen_wall_coords[1]] = left_number;
+            replace_number(labrinth, left_number, right_number);
+        }
+        else if chosen_wall_coords[0]%2 == 1 && chosen_wall_coords[1]%2 == 0 {
+            let up_number = labrinth[chosen_wall_coords[0]][chosen_wall_coords[0]-1];
+            let down_number = labrinth[chosen_wall_coords[0]][chosen_wall_coords[0]+1];
+            labrinth[chosen_wall_coords[0]][chosen_wall_coords[1]] = up_number;
+            replace_number(labrinth, up_number, down_number);
+            print_labrinth(labrinth)
+        }
+    }
+    return labrinth
 }
 
-fn labrinth_finished (labrinth:Vec<Vec<usize>>) -> bool {
-    let labrinth_size = labrinth.len()
-    for i in 0..labrinth_size {
+fn replace_number (labrinth:&mut Vec<Vec<usize>>, number_to_keep:usize, number_to_replace:usize) -> &mut Vec<Vec<usize>>{
+    let labrinth_size = labrinth.len()-1;
+    for i in 1..labrinth_size {
+        for j in 1..labrinth_size {
+            if labrinth[i][j] == number_to_replace {
+                labrinth[i][j] = number_to_keep;
+            }
+        }
+    }
+    return labrinth
+}
 
+fn labrinth_still_boring (labrinth:&Vec<Vec<usize>>) -> bool {
+    let labrinth_size = labrinth.len()-1;
+    let mut labrinth_contents = Vec::new();
+
+    for i in 1..labrinth_size {
+        for j in 1..labrinth_size {
+            if !labrinth_contents.contains(&labrinth[i][j]) {
+                labrinth_contents.push(labrinth[i][j]);
+            }
+        }
+    }
+    if labrinth_contents.len() > 2 {
+        return true
+    }
+    else {
+        return false
     }
 }
 
@@ -73,7 +130,9 @@ fn main() {
     
     const LABRINTH_SIZE: usize = 11; // MUST be odd and greater than 4 for the program to function correctly
 
-    let base_grid = grid_builder(LABRINTH_SIZE);
+    let mut base_grid = grid_builder(LABRINTH_SIZE);
     
-    print_labrinth(base_grid);
+    let labrinth = labrinth_bore(&mut base_grid);
+
+    print_labrinth(labrinth);
 }
