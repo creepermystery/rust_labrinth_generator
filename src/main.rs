@@ -133,12 +133,35 @@ fn doors(labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
     return labrinth
 }
 
+fn random_bore(labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
+    const BORE: u8 = 0;
+    let inner_value = labrinth[1][1];
+    let labrinth_size = labrinth.len();
+
+    for i in 0..labrinth_size {
+        for j in 0..labrinth_size {
+             if i%2==0 && i!=0 && i!=labrinth_size-1 && j%2==1 {
+                if rand::thread_rng().gen_range(0..20) == BORE {
+                    let _ = std::mem::replace(&mut labrinth[i][j], inner_value);
+                }
+            }
+            if i%2==1 && j%2==0 && j!=0 && j!= labrinth_size-1 {
+                if rand::thread_rng().gen_range(0..20) == BORE {
+                    let _ = std::mem::replace(&mut labrinth[i][j], inner_value);
+                }
+            }
+        }
+    }
+    return labrinth
+}
+
 fn main() {
     
-    const LABRINTH_SIZE: usize = 91; // MUST be odd and greater than 4 for the program to function properly
+    const LABRINTH_SIZE: usize = 43; // MUST be odd and greater than 4 for the program to function properly
 
     let mut base_grid = grid_builder(LABRINTH_SIZE);
     let labrinth = labrinth_bore(&mut base_grid);
+    let labrinth = random_bore(labrinth);
     let labrinth = doors(labrinth);
 
     print_labrinth(labrinth);
