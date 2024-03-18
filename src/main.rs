@@ -108,21 +108,17 @@ fn replace_number (labrinth:&mut Vec<Vec<usize>>, number_to_keep:usize, number_t
 
 fn labrinth_still_boring (labrinth:&Vec<Vec<usize>>) -> bool {
     let labrinth_size = labrinth.len()-1;
-    let mut labrinth_contents = Vec::new();
+    let labrinth_contents = labrinth[1][1];
+    let labrinth_wall = labrinth[0][0];
 
     for i in 1..labrinth_size {
         for j in 1..labrinth_size {
-            if !labrinth_contents.contains(&labrinth[i][j]) {
-                labrinth_contents.push(labrinth[i][j]);
+            if labrinth[i][j] != labrinth_contents && labrinth[i][j] != labrinth_wall {
+                return true
             }
         }
     }
-    if labrinth_contents.len() > 2 {
-        return true
-    }
-    else {
-        return false
-    }
+    false
 }
 
 fn doors(labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
@@ -157,7 +153,7 @@ fn random_bore(labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
 
 fn main() {
     
-    const LABRINTH_SIZE: usize = 43; // MUST be odd and greater than 4 for the program to function properly
+    const LABRINTH_SIZE: usize = 151; // MUST be odd and greater than 4 for the program to function properly
 
     let mut base_grid = grid_builder(LABRINTH_SIZE);
     let labrinth = labrinth_bore(&mut base_grid);
