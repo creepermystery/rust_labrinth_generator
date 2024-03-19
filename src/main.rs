@@ -1,14 +1,17 @@
 use rand::Rng;
 
 fn print_labrinth(labrinth:&Vec<Vec<usize>>) {
+    /*
+    
+    */
     let labrinth_size = labrinth.len();
     for i in 0..labrinth_size {
         for j in 0..labrinth_size {
             if labrinth[j][i] == 1 {
-                print!("█");
+                print!("██");
             }
             else {
-                print!(" ")
+                print!("  ")
             }
         }
         println!("");
@@ -16,15 +19,29 @@ fn print_labrinth(labrinth:&Vec<Vec<usize>>) {
 }
 
 fn grid_builder (grid_size:usize) -> Vec<Vec<usize>> {
-
+    /*
+    parameters :
+    - size of the labrinth (must be odd and >= 5) - usize
+    outputs :
+    labrinth - Vec<Vec<usize>>
+    ---
+    Builds a grid of type :
+    ██████████████
+    ██  ██  ██  ██
+    ██████████████
+    ██  ██  ██  ██
+    ██████████████
+    ██  ██  ██  ██
+    ██████████████
+    (example of 7x7 labrinth)
+    */
     let internal_size: usize = grid_size-2;
-
     let mut grid: Vec<Vec<usize>> = Vec::new();
     let full_collum: Vec<usize> = vec![1; grid_size];
+    let mut iterator = 1; // Not 0 because first pass would be a 1 -> wall
 
     grid.push(full_collum.clone());
 
-    let mut iterator = 1; // Not 0 because first pass would be a 1 -> wall
     for i in 0..internal_size {
         let mut collum: Vec<usize> = Vec::new();
         if i%2 == 1 {
@@ -153,7 +170,7 @@ fn random_bore(labrinth:&mut Vec<Vec<usize>>) -> &mut Vec<Vec<usize>> {
 
 fn main() {
     
-    const LABRINTH_SIZE: usize = 151; // MUST be odd and greater than 4 for the program to function properly
+    const LABRINTH_SIZE: usize = 33; // MUST be odd and greater than 4 for the program to function properly
 
     let mut base_grid = grid_builder(LABRINTH_SIZE);
     let labrinth = labrinth_bore(&mut base_grid);

@@ -1,7 +1,13 @@
 # Labrinth generator in Rust programming language
 
-## The goal of this program is to create a random square labrinth
+## This program generates random labrinths
 
-- Labrinth must be doable
-- Labrinth must have more than one solution
-- The program should be able to do a labrinth of any given size
+Some rules about the creation of those labrinths:
+
+- The labrinths are square
+- The labrinths are doable
+- They must have more than one solution
+
+## Capabilities
+
+- The program is able to generate a labrinth of any given size
