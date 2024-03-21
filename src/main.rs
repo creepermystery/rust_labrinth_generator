@@ -87,9 +87,6 @@ fn identify_walls_to_bore (labrinth: &Labrinth) -> Vec<(usize, usize)> {
 
     for i in 1..size-1 {
         for j in 1..size-1 {
-            if i%2 == j%2 {
-                continue
-            }
             if wall_is_valid(labrinth, (i, j)) {
                 wall_coords.push((i, j))
             }
@@ -123,11 +120,7 @@ fn wall_is_valid (labrinth: &Labrinth, coords: (usize, usize)) -> bool {
 }
 
 fn same_corridor_id (cell_a: &Cell, cell_b: &Cell) -> bool {
-    if cell_a.get_corridor_id() == cell_b.get_corridor_id() {
-        return false
-    } else {
-        return true
-    }
+    return cell_a.get_corridor_id() != cell_b.get_corridor_id();
 }
 
 fn bore_path (labrinth: &mut Labrinth, valid_walls_coords: &Vec<(usize, usize)>) {
@@ -187,7 +180,7 @@ fn print_corridor_id (labrinth: &Labrinth) {
 }
 
 fn main () {
-    const SIZE: usize = 81;
+    const SIZE: usize = 85;
     
     print_labrinth(&bore_labrinth(build_labrinth(SIZE)));
 }
