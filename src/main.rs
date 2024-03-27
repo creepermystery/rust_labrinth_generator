@@ -68,9 +68,31 @@ fn bore_labrinth (mut labrinth: Labrinth) -> Labrinth {
         bore_path(&mut labrinth, &walls_to_bore);
     }
     doors(&mut labrinth);
-    // random_boring();
+    random_boring(&mut labrinth);
 
     labrinth
+}
+
+fn random_boring (labrinth: &mut Labrinth) {
+    let size = labrinth.size;
+    let matrix = &mut labrinth.matrix;
+    let id = matrix[1][1].get_corridor_id();
+
+    for i in 0..size {
+        for j in 0..size {
+            if i == 0 || j == 0 || i == size-1 || j == size-1 {
+                continue
+            } else if i%2 == 0 && j%2 == 1 {
+                if rand::thread_rng().gen_range(0..40) == 0 {
+                    matrix[i][j] = Cell::Corridor(id);
+                }
+            } else if i%2 == 1 && j%2 == 0 {
+                if rand::thread_rng().gen_range(0..40) == 0 {
+                    matrix[i][j] = Cell::Corridor(id);
+                }
+            }
+        }
+    }
 }
 
 fn doors (labrinth: &mut Labrinth) {
@@ -180,7 +202,7 @@ fn print_corridor_id (labrinth: &Labrinth) {
 }
 
 fn main () {
-    const SIZE: usize = 85;
+    const SIZE: usize = 131;
     
     print_labrinth(&bore_labrinth(build_labrinth(SIZE)));
 }
