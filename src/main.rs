@@ -16,39 +16,54 @@ impl Cell {
 }
 
 struct Labrinth {
-    size: usize,
+    height: usize,
+    width: usize,
     matrix: Vec<Vec<Cell>>,
 }
 
-fn build_labrinth (size: usize) -> Labrinth {
-    let new_labrinth = build_grid(size);
-    new_labrinth
+impl Labrinth {
+    fn new (height: usize, width: usize) -> Labrinth {
+        let mut labrinth = build_grid(height, width);
+
+        loop {
+            let walls_to_bore = identify_walls_to_bore(&labrinth);
+            if walls_to_bore.len() == 0 {
+                break
+            }
+            bore_path(&mut labrinth, &walls_to_bore);
+        }
+        doors(&mut labrinth);
+        random_boring(&mut labrinth);
+    
+        labrinth
+    }
 }
 
-fn build_grid (size: usize) -> Labrinth {
+fn build_grid (height: usize, width: usize) -> Labrinth {
     let mut grid: Vec<Vec<Cell>> = Vec::new();
-    let full_wall = vec![Cell::Wall; size];
+    let full_wall = vec![Cell::Wall; height];
     let mut iterator = 1;
 
-    for i in 0..size {
+    for i in 0..width {
         if i%2 == 0 {
             grid.push(full_wall.clone());
         } else {
-            grid.push(create_half_wall(size, &mut iterator));
+            grid.push(create_half_wall(height, &mut iterator));
         }
     }
 
     Labrinth {
-        size,
+        height,
+        width,
         matrix: grid,
     }
 }
 
-fn create_half_wall (size: usize, iterator: &mut usize) -> Vec<Cell> {
+fn create_half_wall (height: usize, iterator: &mut usize) -> Vec<Cell> {
     let mut result: Vec<Cell> = Vec::new();
 
-    for i in 0..size {
-        if i%2 == 0 {
+    for j in 0..height {
+        if j%2 == 0 {
             result.push(Cell::Wall);
         } else {
             result.push(Cell::Corridor(*iterator));
@@ -59,28 +74,15 @@ fn create_half_wall (size: usize, iterator: &mut usize) -> Vec<Cell> {
     result
 }
 
-fn bore_labrinth (mut labrinth: Labrinth) -> Labrinth {
-    loop {
-        let walls_to_bore = identify_walls_to_bore(&labrinth);
-        if walls_to_bore.len() == 0 {
-            break
-        }
-        bore_path(&mut labrinth, &walls_to_bore);
-    }
-    doors(&mut labrinth);
-    random_boring(&mut labrinth);
-
-    labrinth
-}
-
 fn random_boring (labrinth: &mut Labrinth) {
-    let size = labrinth.size;
+    let height = labrinth.height;
+    let width = labrinth.width;
     let matrix = &mut labrinth.matrix;
     let id = matrix[1][1].get_corridor_id();
 
-    for i in 0..size {
-        for j in 0..size {
-            if i == 0 || j == 0 || i == size-1 || j == size-1 {
+    for i in 0..width {
+        for j in 0..height {
+            if i == 0 || j == 0 || i == width-1 || j == height-1 {
                 continue
             } else if i%2 == 0 && j%2 == 1 {
                 if rand::thread_rng().gen_range(0..40) == 0 {
@@ -96,19 +98,17 @@ fn random_boring (labrinth: &mut Labrinth) {
 }
 
 fn doors (labrinth: &mut Labrinth) {
-    let size = labrinth.size-1;
     let matrix = &mut labrinth.matrix;
     let id = matrix[1][1].get_corridor_id();
     matrix[1][0] = Cell::Corridor(id);
-    matrix[size-1][size] = Cell::Corridor(id);
+    matrix[labrinth.width-2][labrinth.height-1] = Cell::Corridor(id);
 }
 
 fn identify_walls_to_bore (labrinth: &Labrinth) -> Vec<(usize, usize)> {
-    let size = labrinth.size;
     let mut wall_coords: Vec<(usize, usize)> = Vec::new();
 
-    for i in 1..size-1 {
-        for j in 1..size-1 {
+    for i in 1..labrinth.width-1 {
+        for j in 1..labrinth.height-1 {
             if wall_is_valid(labrinth, (i, j)) {
                 wall_coords.push((i, j))
             }
@@ -119,10 +119,9 @@ fn identify_walls_to_bore (labrinth: &Labrinth) -> Vec<(usize, usize)> {
 }
 
 fn wall_is_valid (labrinth: &Labrinth, coords: (usize, usize)) -> bool {
-    let size = labrinth.size-1;
     let (x, y) = coords;
 
-    if x == 0 || y == 0 || x == size || y == size {
+    if x == 0 || y == 0 || x == labrinth.width-1 || y == labrinth.height-1 {
         return false;
     }
     if x%2 == y%2 {
@@ -132,17 +131,13 @@ fn wall_is_valid (labrinth: &Labrinth, coords: (usize, usize)) -> bool {
         let left_cell = &labrinth.matrix[x-1][y];
         let right_cell = &labrinth.matrix[x+1][y];
 
-        return same_corridor_id(left_cell, right_cell)
+        return left_cell.get_corridor_id() != right_cell.get_corridor_id()
     } else { // If it's a up-down wall
         let up_cell = &labrinth.matrix[x][y-1];
         let down_cell = &labrinth.matrix[x][y+1];
 
-        return same_corridor_id(up_cell, down_cell)
+        return up_cell.get_corridor_id() != down_cell.get_corridor_id()
     }
-}
-
-fn same_corridor_id (cell_a: &Cell, cell_b: &Cell) -> bool {
-    return cell_a.get_corridor_id() != cell_b.get_corridor_id();
 }
 
 fn bore_path (labrinth: &mut Labrinth, valid_walls_coords: &Vec<(usize, usize)>) {
@@ -163,8 +158,8 @@ fn bore_path (labrinth: &mut Labrinth, valid_walls_coords: &Vec<(usize, usize)>)
 }
 
 fn replace_number (labrinth: &mut Labrinth, previous_id: usize, future_id: usize) {
-    for i in 1..labrinth.size-1 {
-        for j in 1..labrinth.size-1 {
+    for i in 1..labrinth.width-1 {
+        for j in 1..labrinth.height-1 {
             let inspected_cell = &mut labrinth.matrix[i][j];
             if inspected_cell.get_corridor_id() == previous_id {
                 *inspected_cell = Cell::Corridor(future_id);
@@ -174,10 +169,8 @@ fn replace_number (labrinth: &mut Labrinth, previous_id: usize, future_id: usize
 }
 
 fn print_labrinth (labrinth: &Labrinth) {
-    let size = labrinth.size;
-
-    for i in 0..size {
-        for j in 0..size {
+    for i in 0..labrinth.width {
+        for j in 0..labrinth.height {
             match labrinth.matrix[i][j] {
                 Cell::Wall => print!("██"),
                 Cell::Corridor(_) => print!("  "),
@@ -188,10 +181,8 @@ fn print_labrinth (labrinth: &Labrinth) {
 }
 
 fn print_corridor_id (labrinth: &Labrinth) {
-    let size = labrinth.size;
-    
-    for i in 0..size {
-        for j in 0..size {
+    for i in 0..labrinth.width {
+        for j in 0..labrinth.height {
             match labrinth.matrix[i][j] {
                 Cell::Wall => print!("██"),
                 Cell::Corridor(id) => print!("{} ", id),
@@ -202,7 +193,9 @@ fn print_corridor_id (labrinth: &Labrinth) {
 }
 
 fn main () {
-    const SIZE: usize = 131;
+    const HEIGHT: usize = 65;
+    const WIDTH: usize = 31;
     
-    print_labrinth(&bore_labrinth(build_labrinth(SIZE)));
+    print_labrinth(&Labrinth::new(HEIGHT, WIDTH));
+
 }
